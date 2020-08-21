@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace 该mapper.xml映射文件的唯一标识符 -->
+<mapper namespace="com.chenzujian.mapper.personCardMapper">
+	<!-- 查询card的信息的sql -->
+	<select id="queryCardById" parameterType="int" resultType="PersonCard">
+		select * from personCard where cardid = #{cardid}
+	</select>
+	<!-- com.chenzujian.mapper.personCardMapper.queryCardById -->
+</mapper>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace 该mapper.xml映射文件的唯一标识符 -->
+<mapper namespace="com.chenzujian.mapper.departmentMapper">
+	<!-- 一对多关联查询,使用延迟加载 select * from person where dept = #{dept} -->
+	<select id="queryDeptAndPersonLazyLoad" resultMap="dept_person_map_lazyload"  >
+			
+			select * from persondept 
+			
+	</select>
+	
+	<resultMap type="PersonDept" id="dept_person_map_lazyload">
+		<!-- 部门的信息，因为主类是dept所以先配置dept -->
+		<id  property="deptId"  column="deptId"/>
+		<result   property="deptAddress" column="deptAddress"/>
+		<!-- 配置成员属性学生，一对多，所以用collection，属性类型JavaType，属性的成员属性类型：ofType -->
+		<collection property="persons" ofType="Person" select="com.chenzujian.mapper.personMapper.queryDeptdById" column="deptId"></collection>
+	</resultMap>
+	
+	
+	
+	
+</mapper>

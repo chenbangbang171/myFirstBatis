@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace 该mapper.xml映射文件的唯一标识符 -->
+<mapper namespace="com.chenzujian.mapper.personMapper">
+
+<!-- 后续通过标签的id值定位唯一sql语句 -->
+	<select id="selectPerson" resultType="Person" parameterType="int">
+		select * from person where id = #{id}
+	</select>
+	
+	<insert id="addPerson" parameterType="Person">
+		insert into person values(#{id}, #{name}, #{age})
+	</insert>
+	
+	<update id="updatePerson" parameterType="Person">
+		update person set name = #{name},age = #{age} where id = #{id} 
+	</update>
+	
+	<delete id="deletePerson" parameterType="int">
+		delete from person where id = #{id}
+	</delete>
+	
+	<select id="queryAllPerson" resultType="Person">
+		select * from person
+	</select>
+	
+	
+	<!--调用存储过程  -->
+	<delete id="deletePersonByIdWithProcedure" statementType="CALLABLE" parameterType="HashMap" >
+		{CALL 
+			deletePersonByIdWithProcedure(
+				#{
+					id,jdbcType=INTEGER,mode=IN
+				}
+			)
+		} 
+	</delete>
+	
+	<!-- 动态sql 使用对象传值-->
+	<select id="queryPersonBySqlTag" parameterType="Person" resultType="Person">
+		select id,name,age from person  
+		<where>
+			<if test=" id != null and id != 0">
+				and id = #{id}	
+			</if>
+			<if test=" name != null and name != ''">
+				and name = #{name}
+			</if>
+		</where>
+	</select>
+	
+	
+	<!-- 动态sql 使用对象保存一个List集合，foreach遍历取值-->
+	<select id="queryPersonByIdIns" parameterType="Id" resultType="Person">
+		select id,name,age from person  
+		<where>
+			<if test="id != null and id.size >0">
+				<foreach collection="id" open="id in (" close=")" separator="," item="id">
+					#{id}
+				</foreach>
+			</if>
+		</where>
+	</select>
+	
+	<!-- 动态sql查询，使用数组传参 -->
+	<select id="queryPersonByIdArray" parameterType="int[]" resultType="Person">
+		select id,name,age from person  
+			<where>
+				<if test="array != null and array.length >0">
+					<foreach collection="array" open="id  in(" close=")" item="id" separator=",">
+						#{id}
+					</foreach>
+				</if>
+			</where>
+	</select>
+	
+	<!-- 动态sql查询，使用list传参 -->
+	<select id="queryPersonByList" parameterType="list" resultType="Person">
+		select id,name,age from person 
+		<where>
+			<if test="list != null and list.size > 0">
+				<foreach collection="list" open="id in (" close=")" item="id" separator=",">
+					#{id}
+				</foreach>
+			</if>
+		</where>
+	</select>
+	
+	<!-- 动态sql查询，使用对象数组传参 -->
+	<select id="queryPersonByInsArray" parameterType="Object[]"  resultType="Person">
+		select id,name,age from person
+		<where>
+			<if test="array != null and array.length > 0">
+				<foreach collection="array" open="and id in (" close=")" item="person" separator=",">
+					#{person.id}
+				</foreach>
+			</if>
+		</where> 
+	</select>
+	
+	<!-- 一对一查询 -->
+	<select id="queryPersonAndCardByIdWithOTO" resultType="PersonCard" parameterType="int">
+		select s.*, p.* from person s inner join personcard p on s.cardid = p.cardid where p.cardid = #{id}
+	</select>
+	
+	<!-- 一对一关联查询，使用resultMap -->
+	<select id="queryPersonAndCardByIdWithOTO2" resultMap="OTOMap" parameterType="int">
+		select s.*, p.* from person s inner join personcard p on s.cardid = p.cardid where s.id = #{id}
+	</select>
+	
+	<resultMap type="Person" id="OTOMap">
+		<id  property="id"  column="id" />
+		<result property="name" column="name"/>
+		<result property="age"  column="age"/>
+		<association property="card" javaType="PersonCard">
+			<id property="cardId" column="cardId"/>
+			<result property="cardName" column="cardName"/>
+		</association>
+	
+	</resultMap>
+	
+	
+	
+	<!-- 一对一关联查询，使用resultMap,使用延迟加载 -->
+	<select id="queryPersonAndCardByIdLazyLoad" resultMap="LazyLoadMap" parameterType="int">
+		select * from person
+	</select>
+	<resultMap type="person" id="LazyLoadMap">
+		
+		<id  property="id"  column="id" />
+		<result property="name" column="name"/>
+		<result property="age"  column="age"/>
+		
+		<association property="card" javaType="PersonCard" select="com.chenzujian.mapper.personCardMapper.queryCardById" column="cardid">
+		<!-- <id property="cardId" column="cardId"/>
+			<result property="cardName" column="cardName"/> -->
+			
+		</association>
+	
+	</resultMap>
+	
+	
+	
+	<!-- 一对多关联查询 -->
+	<select id="queryDpetAndPerson" resultMap="dept_person_map" parameterType="int">
+			select p.*, d.* from person p inner join persondept d 
+				on p.dept = d.deptid
+					 where d.deptid = #{deptid}
+	</select>
+	
+	<resultMap type="PersonDept" id="dept_person_map">
+		<!-- 部门的信息，因为主类是dept所以先配置dept -->
+		<id  property="deptId"  column="deptId"/>
+		<result   property="deptAddress" column="deptAddress"/>
+		<!-- 配置成员属性学生，一对多，所以用collection，属性类型JavaType，属性的成员属性类型：ofType -->
+		<collection property="persons" ofType="Person">
+			<id   property="id" column="id"/>
+			<result property="name" column="name"/>
+			<result  property="age" column="age"/>
+			
+		</collection>
+	
+	</resultMap>
+	
+	
+	<select id="queryDeptdById" parameterType="int" resultType="Person">
+		select * from person where dept = #{dept}
+	</select>
+	
+	
+	
+	
+	
+	
+</mapper>
